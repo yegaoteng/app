@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>qy资源</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary-blue: #2196F3;
+            --light-blue: #E3F2FD;
+            --dark-blue: #1976D2;
+            --accent-blue: #64B5F6;
+            --white: #FFFFFF;
+            --light-gray: #F5F5F5;
+            --text-color: #333333;
+            --shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+        }
+        
+        body {
+            background-color: #f8fafc;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 头部样式 */
+        header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-icon {
+            font-size: 2.5rem;
+            margin-right: 10px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        /* 栏目切换 */
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            background: var(--white);
+            border-radius: 12px;
+            padding: 5px;
+            box-shadow: var(--shadow);
+            max-width: 500px;
+            margin: 0 auto 2rem;
+        }
+        
+        .tab {
+            padding: 12px 30px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .tab.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+        
+        /* 内容区域 */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--dark-blue);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+            font-size: 1.6rem;
+        }
+        
+        /* 按钮网格 */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .app-button {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-color);
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .app-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(33, 150, 243, 0.15);
+            border-color: var(--accent-blue);
+        }
+        
+        .app-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--light-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.8rem;
+            color: var(--primary-blue);
+        }
+        
+        .app-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+            color: var(--dark-blue);
+        }
+        
+        .app-info p {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 2rem;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+        
+        .config-notice {
+            background: var(--light-blue);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        .config-notice h3 {
+            color: var(--dark-blue);
+            margin-bottom: 0.5rem;
+        }
+        
+        .config-notice code {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .buttons-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tab {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-cube logo-icon"></i>
+                <h1>App资源集合站</h1>
+            </div>
+            <p class="subtitle">精选实用应用与工具，提高工作效率与生活品质。栏目一提供应用资源，栏目二提供常用网页直达。</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- 栏目切换 -->
+        <div class="tab-container">
+            <button class="tab active" data-tab="tab1">
+                <i class="fas fa-mobile-alt"></i> qy资源站
+            </button>
+            <button class="tab" data-tab="tab2">
+                <i class="fas fa-globe"></i> 常用网页
+            </button>
+        </div>
+        
+        <!-- 栏目一：App资源站 -->
+        <section id="tab1" class="content-section active">
+            <h2 class="section-title">
+                <i class="fas fa-box-open"></i> qy应用资源
+            </h2>
+            
+            <div class="buttons-grid" id="app-buttons">
+                <!-- 应用按钮将通过JavaScript动态生成 -->
+            </div>
+        </section>
+        
+        <!-- 栏目二：常用网页 -->
+        <section id="tab2" class="content-section">
+            <h2 class="section-title">
+                <i class="fas fa-link"></i> 常用网页直达
+            </h2>
+            
+            <div class="buttons-grid" id="webpage-buttons">
+                <!-- 网页按钮将通过JavaScript动态生成 -->
+            </div>
+        </section>
+        
+        <!-- 配置说明 -->
+      
+    
+    <footer>
+        <div class="container">
+            <p>© 2026 App资源集合站 | 便捷的资源导航</p>
+            <p><i class="fas fa-code"></i> 基于HTML、CSS和JavaScript构建</p>
+        </div>
+    </footer>
+    
+    <script>
+        // 应用资源数据 - 在这里修改按钮数量和属性
+        const appResources = [
+            {
+                name: "KatelyaTV",
+                description: "一个自建的免费看动漫软件",
+                icon: "KatelyaTV.jpg",
+                link: "index1.html",
+                color: "#4CAF50"
+            }
+            
+        ];
+        
+        // 网页资源数据 - 在这里修改按钮数量和属性
+        const webResources = [
+            {
+                name: "app资源站",
+                description: "当前页面",
+                icon: "n.jpg",
+                link: "https://app.webwd.de5.net",
+                color: "#4285F4"
+            },
+            {
+                name: "KatelyaTV网页版",
+                description: "网页版免费看动漫",
+                icon: "qydm.jpg",
+                link: "https://tv.webwd.de5.net",
+                color: "#34A853"
+            }
+            
+            
+        ];
+        
+        // 生成按钮函数
+        function generateButtons(resources, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+            
+            resources.forEach(resource => {
+                const button = document.createElement("a");
+                button.className = "app-button";
+                button.href = resource.link;
+                button.target = "_blank";
+                
+                button.innerHTML = `
+                    <div class="app-icon" style="background-color: ${resource.color}20; color: ${resource.color};">
+                        <i class="${resource.icon}"></i>
+                    </div>
+                    <div class="app-info">
+                        <h3>${resource.name}</h3>
+                        <p>${resource.description}</p>
+                    </div>
+                `;
+                
+                container.appendChild(button);
+            });
+        }
+        
+        // 初始化按钮
+        document.addEventListener("DOMContentLoaded", function() {
+            // 生成应用资源按钮
+            generateButtons(appResources, "app-buttons");
+            
+            // 生成网页资源按钮
+            generateButtons(webResources, "webpage-buttons");
+            
+            // 栏目切换功能
+            const tabs = document.querySelectorAll(".tab");
+            const sections = document.querySelectorAll(".content-section");
+            
+            tabs.forEach(tab => {
+                tab.addEventListener("click", function() {
+                    const targetTab = this.getAttribute("data-tab");
+                    
+                    // 更新激活的tab
+                    tabs.forEach(t => t.classList.remove("active"));
+                    this.classList.add("active");
+                    
+                    // 显示对应的内容区域
+                    sections.forEach(section => {
+                        section.classList.remove("active");
+                        if (section.id === targetTab) {
+                            section.classList.add("active");
+                        }
+                    });
+                });
+            });
+            
+            // 添加点击动画效果
+            const buttons = document.querySelectorAll('.app-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
