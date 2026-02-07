@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title></title>
+    <!-- 引入hls.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #8b0000, #d42828, #8b0000);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 马年装饰元素 */
+        .horse-decoration {
+            position: absolute;
+            font-size: 8rem;
+            opacity: 0.05;
+            color: #ffd700;
+            z-index: -1;
+        }
+        
+        .horse-1 {
+            top: 10%;
+            left: 5%;
+            transform: rotate(-15deg);
+        }
+        
+        .horse-2 {
+            bottom: 10%;
+            right: 5%;
+            transform: rotate(15deg);
+        }
+        
+        /* 灯笼装饰 */
+        .lantern {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            background: #d42828;
+            border-radius: 20px 20px 0 0;
+            z-index: -1;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        
+        .lantern::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            width: 10px;
+            height: 15px;
+            background: #ffd700;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .lantern::after {
+            content: "";
+            position: absolute;
+            bottom: -15px;
+            left: 15px;
+            width: 10px;
+            height: 15px;
+            background: #ffd700;
+            border-radius: 0 0 5px 5px;
+        }
+        
+        .lantern-1 {
+            top: 5%;
+            left: 10%;
+        }
+        
+        .lantern-2 {
+            top: 5%;
+            right: 10%;
+        }
+        
+        .player-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        /* 播放器主体 */
+        .player-main {
+            background: rgba(139, 0, 0, 0.9);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 2px solid #ffd700;
+        }
+        
+        .player-header {
+            padding: 20px;
+            background: linear-gradient(to right, #d42828, #ff8c00);
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        
+        .player-header h1 {
+            color: #ffd700;
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+        
+        /* 线路选择器样式 */
+        .line-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .line-btn {
+            padding: 8px 15px;
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid #ffd700;
+            border-radius: 5px;
+            color: #ffd700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .line-btn.active {
+            background: rgba(255, 215, 0, 0.8);
+            color: #8b0000;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+        }
+        
+        .line-btn:hover {
+            background: rgba(255, 215, 0, 0.4);
+        }
+        
+        .video-container {
+            position: relative;
+            background: black;
+            aspect-ratio: 16/9;
+        }
+        
+        #videoPlayer {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* B站播放器容器 */
+        .bilibili-player-container {
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        
+        .bilibili-player-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* 播放列表 */
+        .playlist-section {
+            background: rgba(139, 0, 0, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #ffd700;
+        }
+        
+        .playlist-title {
+            color: #ffd700;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ffd700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        .episode-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        
+        .episode-item {
+            padding: 12px 15px;
+            background: rgba(255, 215, 0, 0.1);
+            border-radius: 8px;
+            color: #ffddaa;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .episode-item:hover {
+            background: rgba(255, 215, 0, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .episode-item.active {
+            background: linear-gradient(to right, #d42828, #ff8c00);
+            color: #ffd700;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            border: 1px solid #ffd700;
+        }
+        
+        /* 控制栏 */
+        .controls-bar {
+            padding: 15px 20px;
+            background: rgba(0, 0, 0, 0.8);
+            transition: opacity 0.3s;
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(to right, #d42828, #ff8c00);
+            border-radius: 4px;
+            transition: width 0.1s;
+        }
+        
+        .controls-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .control-btn {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: #ffd700;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 215, 0, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .time-display {
+            color: #ffddaa;
+            font-size: 14px;
+        }
+        
+        /* 音量滑块 */
+        #volumeSlider {
+            width: 80px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        #volumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        #volumeSlider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        /* 长按倍速提示 */
+        .speed-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(139, 0, 0, 0.9);
+            color: #ffd700;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 24px;
+            z-index: 20;
+            display: none;
+            pointer-events: none;
+            border: 2px solid #ffd700;
+        }
+        
+        /* 新年祝福语 */
+        .new-year-blessing {
+            text-align: center;
+            color: #ffd700;
+            font-size: 18px;
+            margin-top: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .player-container {
+                padding: 10px;
+            }
+            
+            .player-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .player-header h1 {
+                font-size: 20px;
+            }
+            
+            .episode-list {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .episode-item {
+                padding: 10px;
+                font-size: 14px;
+            }
+            
+            .lantern {
+                display: none;
+            }
+            
+            .controls-bottom {
+                flex-wrap: wrap;
+                gap: 10px;
+                justify-content: center;
+            }
+            
+            .control-group {
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .player-header h1 {
+                font-size: 18px;
+            }
+            
+            .episode-list {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+            
+            .episode-item {
+                padding: 8px;
+                font-size: 13px;
+            }
+            
+            .control-btn {
+                font-size: 16px;
+                padding: 6px;
+            }
+            
+            #volumeSlider {
+                width: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 马年装饰元素 -->
+    <div class="horse-decoration horse-1">🐎🐎</div>
+    <div class="horse-decoration horse-2">🐎🐎</div>
+
+    <!-- 灯笼装饰 -->
+    <div class="lantern lantern-1"></div>
+    <div class="lantern lantern-2"></div>
+    
+    <div class="speed-indicator" id="speedIndicator">2.0x</div>
+    
+    <div class="player-container">
+        <div class="player-main">
+            <div class="player-header">
+                <h1 id="currentTitle">bilibili</h1>
+                <div class="line-selector">
+                    <button class="line-btn active" id="newLineBtn">bilibili线路</button>
+                </div>
+            </div>
+            <div class="video-container">
+                <video id="videoPlayer" preload="metadata">
+                    您的浏览器不支持视频标签
+                </video>
+                <div class="bilibili-player-container" id="bilibiliPlayer">
+                    <!-- B站播放器将在这里加载 -->
+                </div>
+            </div>
+            <div class="controls-bar">
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="controls-bottom">
+                    <div class="control-group">
+                        <button class="control-btn" id="playPauseBtn">▶️</button>
+                        <button class="control-btn" id="prevBtn">⏮</button>
+                        <button class="control-btn" id="nextBtn">⏭</button>
+                        <button class="control-btn" id="fullscreenBtn">⛶</button>
+                    </div>
+                    <div class="time-display">
+                        <span id="currentTime">00:00</span> / 
+                        <span id="totalTime">00:00</span>
+                    </div>
+                    <div class="control-group">
+                        <button class="control-btn" id="volumeBtn">🔊</button>
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="playlist-section">
+            <h2 class="playlist-title">播放列表</h2>
+            <ul class="episode-list" id="episodeList">
+                <!-- 剧集列表由JS生成 -->
+            </ul>
+        </div>
+        
+ 
+        </div>
+    
+
+    <script>
+        // 动漫剧集数据
+        const playlists = {          
+            newLine: [
+                { 
+                    title: "KatelyaTV应用介绍", 
+                    url: "bilibili",
+                    embedCode: '<iframe src="//player.bilibili.com/player.html?isOutside=true&aid=116016898115301&bvid=BV1yZFYzQE6G&cid=35835480365&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>'
+                }
+            ]
+        };
+
+        const video = document.getElementById('videoPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeBtn = document.getElementById('volumeBtn');
+        const episodeList = document.getElementById('episodeList');
+        const currentTitle = document.getElementById('currentTitle');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const newLineBtn = document.getElementById('newLineBtn');
+        const bilibiliPlayer = document.getElementById('bilibiliPlayer');
+        const speedIndicator = document.getElementById('speedIndicator');
+
+        let currentEpisodeIndex = 0;
+        let currentPlaylist = playlists.newLine;
+        let longPressTimer;
+        let isLongPressing = false;
+        let currentLine = 'newLine';
+        let hls = null;
+        let isBilibiliPlayerActive = false;
+
+        // 初始化播放列表
+        function initPlaylist() {
+            episodeList.innerHTML = '';
+            currentPlaylist.forEach((episode, index) => {
+                const li = document.createElement('li');
+                li.className = 'episode-item';
+                if (index === 0) li.classList.add('active');
+                li.textContent = episode.title;
+                li.addEventListener('click', () => loadEpisode(index));
+                episodeList.appendChild(li);
+            });
+        }
+
+        // 加载剧集
+        function loadEpisode(index) {
+            currentEpisodeIndex = index;
+            const episode = currentPlaylist[index];
+            const videoSource = episode.url;
+            
+            // 检查是否是B站播放器
+            if (videoSource === 'bilibili') {
+                // 显示B站播放器，隐藏视频播放器
+                video.style.display = 'none';
+                bilibiliPlayer.style.display = 'block';
+                bilibiliPlayer.innerHTML = episode.embedCode;
+                isBilibiliPlayerActive = true;
+                
+                // 隐藏控制栏
+                document.querySelector('.controls-bar').style.display = 'none';
+            } else {
+                // 显示视频播放器，隐藏B站播放器
+                video.style.display = 'block';
+                bilibiliPlayer.style.display = 'none';
+                isBilibiliPlayerActive = false;
+                
+                // 显示控制栏
+                document.querySelector('.controls-bar').style.display = 'block';
+                
+                // 销毁之前的HLS实例
+                if (hls) {
+                    hls.destroy();
+                    hls = null;
+                }
+                
+                // 检查是否是M3U8文件
+                if (videoSource.endsWith('.m3u8')) {
+                    // 使用HLS.js播放M3U8
+                    if (Hls.isSupported()) {
+                        hls = new Hls();
+                        hls.loadSource(videoSource);
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            video.play().catch(e => {
+                                console.log('自动播放被阻止:', e);
+                            });
+                        });
+                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        // Safari原生支持HLS
+                        video.src = videoSource;
+                        video.addEventListener('loadedmetadata', () => {
+                            video.play().catch(e => {
+                                console.log('自动播放被阻止:', e);
+                            });
+                        });
+                    } else {
+                        alert('您的浏览器不支持播放M3U8格式视频');
+                        return;
+                    }
+                } else {
+                    // 普通视频文件
+                    video.src = videoSource;
+                    video.play().catch(e => {
+                        console.log('自动播放被阻止:', e);
+                    });
+                }
+            }
+            
+            currentTitle.textContent = episode.title;
+            
+            // 更新播放列表选中状态
+            document.querySelectorAll('.episode-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+            
+            if (!isBilibiliPlayerActive) {
+                updatePlayPauseBtn(true);
+            }
+        }
+
+        // 切换线路
+        function switchLine(line) {
+            currentLine = line;
+            currentPlaylist = playlists[line];
+            
+            // 更新按钮状态
+            newLineBtn.classList.toggle('active', line === 'newLine');
+            
+            // 重新初始化播放列表
+            initPlaylist();
+            
+            // 加载第一个剧集
+            loadEpisode(0);
+        }
+
+        // 播放/暂停
+        function togglePlayPause() {
+            if (isBilibiliPlayerActive) return;
+            
+            if (video.paused) {
+                video.play().then(() => {
+                    updatePlayPauseBtn(true);
+                }).catch(e => {
+                    console.log('播放失败:', e);
+                });
+            } else {
+                video.pause();
+                updatePlayPauseBtn(false);
+            }
+        }
+
+        playPauseBtn.addEventListener('click', togglePlayPause);
+
+        // 更新播放按钮
+        function updatePlayPauseBtn(isPlaying) {
+            playPauseBtn.textContent = isPlaying ? '⏸' : '▶️';
+        }
+
+        // 视频时间更新
+        video.addEventListener('timeupdate', () => {
+            if (video.duration) {
+                const percent = (video.currentTime / video.duration) * 100;
+                progressFill.style.width = percent + '%';
+                currentTimeEl.textContent = formatTime(video.currentTime);
+            }
+        });
+
+        // 点击进度条跳转
+        progressContainer.addEventListener('click', (e) => {
+            if (isBilibiliPlayerActive) return;
+            
+            if (video.duration) {
+                const rect = progressContainer.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickTime = (clickX / rect.width) * video.duration;
+                video.currentTime = clickTime;
+            }
+        });
+
+        // 加载元数据
+        video.addEventListener('loadedmetadata', () => {
+            if (video.duration) {
+                totalTimeEl.textContent = formatTime(video.duration);
+            }
+        });
+
+        // 音量控制
+        volumeSlider.addEventListener('input', () => {
+            if (isBilibiliPlayerActive) return;
+            video.volume = volumeSlider.value;
+            updateVolumeButton(video.volume);
+        });
+
+        // 更新音量按钮
+        function updateVolumeButton(volume) {
+            if (volume === 0) {
+                volumeBtn.textContent = '🔇';
+            } else if (volume < 0.5) {
+                volumeBtn.textContent = '🔈';
+            } else {
+                volumeBtn.textContent = '🔊';
+            }
+        }
+
+        // 静音切换
+        volumeBtn.addEventListener('click', () => {
+            if (isBilibiliPlayerActive) return;
+            
+            if (video.volume > 0) {
+                video.volume = 0;
+                volumeSlider.value = 0;
+            } else {
+                video.volume = 1;
+                volumeSlider.value = 1;
+            }
+            updateVolumeButton(video.volume);
+        });
+
+        // 上一集/下一集
+        function prevEpisode() {
+            if (currentEpisodeIndex > 0) {
+                loadEpisode(currentEpisodeIndex - 1);
+            }
+        }
+
+        function nextEpisode() {
+            if (currentEpisodeIndex < currentPlaylist.length - 1) {
+                loadEpisode(currentEpisodeIndex + 1);
+            }
+        }
+
+        prevBtn.addEventListener('click', prevEpisode);
+        nextBtn.addEventListener('click', nextEpisode);
+
+        // 自动播放下一集
+        video.addEventListener('ended', () => {
+            if (isBilibiliPlayerActive) return;
+            
+            if (currentEpisodeIndex < currentPlaylist.length - 1) {
+                setTimeout(() => {
+                    loadEpisode(currentEpisodeIndex + 1);
+                }, 2000);
+            }
+        });
+
+        // 全屏功能
+        function toggleFullscreen() {
+            if (isBilibiliPlayerActive) return;
+            
+            const element = document.querySelector('.player-main');
+            
+            if (!document.fullscreenElement) {
+                if (element.requestFullscreen) {
+                    element.requestFullscreen();
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // 长按倍速播放功能（移动端）
+        video.addEventListener('touchstart', (e) => {
+            if (isBilibiliPlayerActive) return;
+            
+            e.preventDefault();
+            longPressTimer = setTimeout(() => {
+                isLongPressing = true;
+                video.playbackRate = 2.0;
+                speedIndicator.textContent = '2.0x';
+                speedIndicator.style.display = 'block';
+            }, 500);
+        });
+
+        video.addEventListener('touchend', (e) => {
+            if (isBilibiliPlayerActive) return;
+            
+            e.preventDefault();
+            clearTimeout(longPressTimer);
+            
+            if (isLongPressing) {
+                isLongPressing = false;
+                video.playbackRate = 1.0;
+                setTimeout(() => {
+                    speedIndicator.style.display = 'none';
+                }, 500);
+            }
+        });
+
+        // 线路切换事件
+        newLineBtn.addEventListener('click', () => switchLine('newLine'));
+
+        // 格式化时间
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return '00:00';
+            
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (isBilibiliPlayerActive) return;
+            
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    video.volume = Math.min(1, video.volume + 0.1);
+                    volumeSlider.value = video.volume;
+                    updateVolumeButton(video.volume);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    video.volume = Math.max(0, video.volume - 0.1);
+                    volumeSlider.value = video.volume;
+                    updateVolumeButton(video.volume);
+                    break;
+                case 'KeyF':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+            }
+        });
+
+        // 初始化
+        window.addEventListener('load', () => {
+            initPlaylist();
+            loadEpisode(0);
+            updateVolumeButton(1);
+        });
+
+        // 响应式调整
+        function adjustLayout() {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                document.body.style.zoom = "100%";
+            } else {
+                const screenWidth = window.screen.width;
+                if (screenWidth > 1920) {
+                    document.body.style.zoom = "90%";
+                } else {
+                    document.body.style.zoom = "100%";
+                }
+            }
+        }
+
+        window.addEventListener('resize', adjustLayout);
+        adjustLayout();
+    </script>
+</body>
+</html>
